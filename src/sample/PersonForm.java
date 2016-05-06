@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JButton;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
 import javax.swing.JTable;
@@ -30,12 +31,17 @@ import service.PersonService;
  */
 public class PersonForm extends javax.swing.JFrame {
 
+    enum Mode {
+        NEW, EDIT, DELETE, NONE
+    }
+
     private PersonCollection personCollection;
     private PersonService personService;
     private final JFileChooser fileDialog;
     private PersonTableModel model;
     private Document document;
     private int selectedRowIndex = -1;
+    private Mode currentMode = Mode.NONE;
 
     /**
      * Creates new form PersonForm
@@ -48,23 +54,16 @@ public class PersonForm extends javax.swing.JFrame {
         model = new PersonTableModel();
         model.setData(personCollection);
         personTable.setModel(model);
-//        personTable.getSelectionModel().addListSelectionListener(new ListSelectionListener() {
-//            @Override
-//            public void valueChanged(ListSelectionEvent e) {
-//                int selectedRowIndex = e.getFirstIndex();
-//                Person selectedPerson = personCollection.getPersonList().get(selectedRowIndex);
-//                populatePersonForm(selectedPerson);
-////                throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
-//            }
-//        });
+
         try {
             document = PersonService.getDefaultDocument();
         } catch (ParserConfigurationException ex) {
             Logger.getLogger(PersonForm.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(this, "ParserConfigurationException when create Document Object.", "Error", JOptionPane.ERROR_MESSAGE);
         }
-        
+
         toggleEditMode(false);
+        toggleButton(false);
     }
 
     private void populatePersonForm(Person person) {
@@ -99,6 +98,9 @@ public class PersonForm extends javax.swing.JFrame {
         nameTextField = new javax.swing.JTextField();
         ageTextField = new javax.swing.JTextField();
         genderComboBox = new javax.swing.JComboBox<>();
+        submitCancelPanel = new javax.swing.JPanel();
+        submitBtn = new javax.swing.JButton();
+        cancelBtn = new javax.swing.JButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -123,6 +125,7 @@ public class PersonForm extends javax.swing.JFrame {
                 return types [columnIndex];
             }
         });
+        personTable.setSelectionMode(javax.swing.ListSelectionModel.SINGLE_SELECTION);
         personTable.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 personTableRowSelected(evt);
@@ -142,7 +145,7 @@ public class PersonForm extends javax.swing.JFrame {
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
-                .addContainerGap(9, Short.MAX_VALUE)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                 .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 269, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap())
         );
@@ -189,16 +192,16 @@ public class PersonForm extends javax.swing.JFrame {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel2Layout.createSequentialGroup()
-                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(updateBtn)
-                    .addComponent(deleteBtn)
-                    .addComponent(loadFileBtn)
+                .addComponent(loadFileBtn)
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+            .addGroup(jPanel2Layout.createSequentialGroup()
+                .addGroup(jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                    .addComponent(deleteBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(updateBtn, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(jPanel2Layout.createSequentialGroup()
-                        .addContainerGap()
-                        .addComponent(addBtn)))
-                .addGap(3, 3, 3))
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addComponent(saveToFileBtn)
+                        .addGap(0, 2, Short.MAX_VALUE)
+                        .addComponent(saveToFileBtn))
+                    .addComponent(addBtn, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
                 .addContainerGap())
         );
         jPanel2Layout.setVerticalGroup(
@@ -229,6 +232,41 @@ public class PersonForm extends javax.swing.JFrame {
 
         genderComboBox.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "male", "female" }));
 
+        submitBtn.setText("Submit");
+        submitBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                submitBtnActionPerformed(evt);
+            }
+        });
+
+        cancelBtn.setText("Cancel");
+        cancelBtn.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                cancelBtnActionPerformed(evt);
+            }
+        });
+
+        javax.swing.GroupLayout submitCancelPanelLayout = new javax.swing.GroupLayout(submitCancelPanel);
+        submitCancelPanel.setLayout(submitCancelPanelLayout);
+        submitCancelPanelLayout.setHorizontalGroup(
+            submitCancelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(submitCancelPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addComponent(submitBtn)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(cancelBtn)
+                .addContainerGap())
+        );
+        submitCancelPanelLayout.setVerticalGroup(
+            submitCancelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+            .addGroup(submitCancelPanelLayout.createSequentialGroup()
+                .addContainerGap()
+                .addGroup(submitCancelPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                    .addComponent(submitBtn)
+                    .addComponent(cancelBtn))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+        );
+
         javax.swing.GroupLayout jPanel3Layout = new javax.swing.GroupLayout(jPanel3);
         jPanel3.setLayout(jPanel3Layout);
         jPanel3Layout.setHorizontalGroup(
@@ -245,7 +283,11 @@ public class PersonForm extends javax.swing.JFrame {
                     .addComponent(nameTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 200, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(ageTextField, javax.swing.GroupLayout.PREFERRED_SIZE, 125, javax.swing.GroupLayout.PREFERRED_SIZE)
                     .addComponent(genderComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(15, Short.MAX_VALUE))
+                .addContainerGap(13, Short.MAX_VALUE))
+            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel3Layout.createSequentialGroup()
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addComponent(submitCancelPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addGap(48, 48, 48))
         );
         jPanel3Layout.setVerticalGroup(
             jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -262,6 +304,8 @@ public class PersonForm extends javax.swing.JFrame {
                 .addGroup(jPanel3Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(jLabel3)
                     .addComponent(genderComboBox, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, 18)
+                .addComponent(submitCancelPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
 
@@ -293,72 +337,38 @@ public class PersonForm extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void addPersonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_addPersonActionPerformed
-        String buttonType = addBtn.getText();
-        if ("New".equals(buttonType)) {
-            toggleEditMode(true);
-            addBtn.setText("Add");
-            return;
-        } 
-        
-        try {
-            String name = nameTextField.getText();
-            int age = Integer.parseInt(ageTextField.getText().trim());
-            String gender = (String) genderComboBox.getSelectedItem();
-            Person newPerson = new Person(name, age, gender);
-            personCollection.getPersonList().add(newPerson);
-            PersonService.addPersonToDocument(document, newPerson);
-            model.setData(personCollection);
-            model.fireTableDataChanged();
-            
-            toggleEditMode(false);
-            addBtn.setText("New");
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid age!", "Error", JOptionPane.ERROR_MESSAGE);
-        }
-
+        currentMode = Mode.NEW;
+        toggleEditMode(true);
+        toggleButton(addBtn, true);
     }//GEN-LAST:event_addPersonActionPerformed
 
     private void updatePersonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_updatePersonActionPerformed
-        String buttonType = updateBtn.getText();
-        if ("Edit".equals(buttonType) && selectedRowIndex != -1) {
-            toggleEditMode(true);
-            updateBtn.setText("Update");
+        if (selectedRowIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a records to update!", "Error", JOptionPane.ERROR_MESSAGE);
+            updateBtn.setEnabled(false);
             return;
-        } 
-        
-        try {
-            String name = nameTextField.getText();
-            int age = Integer.parseInt(ageTextField.getText().trim());
-            String gender = (String) genderComboBox.getSelectedItem();
-            Person updatePerson = personCollection.getPersonList().get(selectedRowIndex);
-            updatePerson.setName(name);
-            updatePerson.setAge(age);
-            updatePerson.setGender(gender);
-                              
-            PersonService.updatePersonInDocument(document, updatePerson, selectedRowIndex);
-            model.setData(personCollection);
-            model.fireTableDataChanged();
-            
-            toggleEditMode(false);
-            updateBtn.setText("Edit");
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Invalid age!", "Error", JOptionPane.ERROR_MESSAGE);
         }
+        
+        currentMode = Mode.EDIT;
+        toggleEditMode(true);
+        toggleButton(updateBtn, true);
+
     }//GEN-LAST:event_updatePersonActionPerformed
 
     private void deletePersonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_deletePersonActionPerformed
-        
+
         if (selectedRowIndex == -1) {
+            JOptionPane.showMessageDialog(this, "Please select a records to delete!", "Error", JOptionPane.ERROR_MESSAGE);
             deleteBtn.setEnabled(false);
             return;
-        } 
-        
+        }
+
         try {
-            personCollection.getPersonList().remove(selectedRowIndex);                              
+            personCollection.getPersonList().remove(selectedRowIndex);
             //PersonService.deletePersonInDocument(document, selectedRowIndex);
             model.setData(personCollection);
             model.fireTableDataChanged();
-            
+
             toggleEditMode(false);
             updateBtn.setText("Edit");
         } catch (NumberFormatException ex) {
@@ -378,6 +388,8 @@ public class PersonForm extends javax.swing.JFrame {
                 personTable.setModel(model);
                 //model.fireTableDataChanged();
                 ((PersonTableModel) personTable.getModel()).fireTableDataChanged();;
+                
+                toggleButton(true);
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this, "Could not parse the file", "Error", JOptionPane.ERROR_MESSAGE);
 
@@ -416,16 +428,83 @@ public class PersonForm extends javax.swing.JFrame {
             populatePersonForm(selectedPerson);
             deleteBtn.setEnabled(true);
         }
-        
+
 
     }//GEN-LAST:event_personTableRowSelected
+
+    private void submitBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_submitBtnActionPerformed
+        switch (currentMode) {
+            case NEW:
+                try {
+                    String name = nameTextField.getText();
+                    int age = Integer.parseInt(ageTextField.getText().trim());
+                    String gender = (String) genderComboBox.getSelectedItem();
+                    Person newPerson = new Person(name, age, gender);
+                    personCollection.getPersonList().add(newPerson);
+                    PersonService.addPersonToDocument(document, newPerson);
+                    model.setData(personCollection);
+                    model.fireTableDataChanged();
+
+                    toggleEditMode(false);
+                    toggleEditMode(true);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Invalid age!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                break;
+            case EDIT:
+                try {
+                    String name = nameTextField.getText();
+                    int age = Integer.parseInt(ageTextField.getText().trim());
+                    String gender = (String) genderComboBox.getSelectedItem();
+                    Person updatePerson = personCollection.getPersonList().get(selectedRowIndex);
+                    updatePerson.setName(name);
+                    updatePerson.setAge(age);
+                    updatePerson.setGender(gender);
+
+                    PersonService.updatePersonInDocument(document, updatePerson, selectedRowIndex);
+                    model.setData(personCollection);
+                    model.fireTableDataChanged();
+
+                    toggleEditMode(false);
+                    toggleEditMode(true);
+                } catch (NumberFormatException ex) {
+                    JOptionPane.showMessageDialog(this, "Invalid age!", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                break;
+            case DELETE:
+                break;
+            default:
+                break;
+
+        }
+    }//GEN-LAST:event_submitBtnActionPerformed
+
+    private void toggleButton(JButton button, boolean enabled) {
+        addBtn.setEnabled(!enabled);
+        updateBtn.setEnabled(!enabled);
+        deleteBtn.setEnabled(!enabled);
+
+        button.setEnabled(enabled);
+    }
+
+    private void toggleButton(boolean enabled) {
+        addBtn.setEnabled(enabled);
+        updateBtn.setEnabled(enabled);
+        deleteBtn.setEnabled(enabled);
+    }
+
+    private void cancelBtnActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_cancelBtnActionPerformed
+        toggleEditMode(false);
+        toggleButton(true);
+    }//GEN-LAST:event_cancelBtnActionPerformed
 
     private void toggleEditMode(boolean enabled) {
         nameTextField.setEnabled(enabled);
         ageTextField.setEnabled(enabled);
         genderComboBox.setEnabled(enabled);
+        submitCancelPanel.setVisible(enabled);
     }
-    
+
     /**
      * @param args the command line arguments
      */
@@ -464,6 +543,7 @@ public class PersonForm extends javax.swing.JFrame {
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton addBtn;
     private javax.swing.JTextField ageTextField;
+    private javax.swing.JButton cancelBtn;
     private javax.swing.JButton deleteBtn;
     private javax.swing.JComboBox<String> genderComboBox;
     private javax.swing.JLabel jLabel1;
@@ -477,6 +557,8 @@ public class PersonForm extends javax.swing.JFrame {
     private javax.swing.JTextField nameTextField;
     private javax.swing.JTable personTable;
     private javax.swing.JButton saveToFileBtn;
+    private javax.swing.JButton submitBtn;
+    private javax.swing.JPanel submitCancelPanel;
     private javax.swing.JButton updateBtn;
     // End of variables declaration//GEN-END:variables
 }
