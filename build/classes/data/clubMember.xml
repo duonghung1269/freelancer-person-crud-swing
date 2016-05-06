@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<people>
+    <person>
+        <age>20</age>
+        <gender>male</gender>
+        <name>John Rom</name>
+    </person>
+    <person>
+        <age>19</age>
+        <gender>male</gender>
+        <name>Doke bol 22</name>
+    </person>
+    
+<person>
+<name>23</name>
+<age>234</age>
+<gender>male</gender>
+</person>
+<person>
+<name>34</name>
+<age>23</age>
+<gender>female</gender>
+</person>
+</people>
